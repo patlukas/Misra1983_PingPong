@@ -5,6 +5,38 @@ import sys
 import keyboard
 
 
+class PingPongConnectionUDP:
+    def __init__(self, addr_my, addr_next):
+        self.addr_my = addr_my
+        self.__addr_next = addr_next
+        self.__addr_before = ()
+        self.__socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.__socket_udp.bind(self.addr_my)
+
+    def create_node_send(self):
+        pass
+
+    def create_node_recv(self):
+        pass
+
+    def recv_msg(self):
+        data, addr = self.__socket_udp.recvfrom(1024)
+        if not data:
+            return None
+        self.__addr_before = addr
+
+        value = data.decode('utf-8').strip()
+        try:
+            value = int(value)
+        except ValueError:
+            return None
+        return value
+
+    def send_msg(self, value):
+        msg = str(value).encode('utf-8')
+        self.__socket_udp.sendto(msg, self.__addr_next)
+
+
 class PingPongConnectionTCP:
     def __init__(self, addr_my, addr_next):
         self.addr_my = addr_my
@@ -38,16 +70,14 @@ class PingPongConnectionTCP:
         self.__node_to_send.sendall(data)
 
 
-class PingPong(PingPongConnectionTCP):
+class PingPong(PingPongConnectionUDP):
     def __init__(self, my_ip, my_port, next_ip, next_port, special_mode):
         super().__init__((my_ip, int(my_port)), (next_ip, int(next_port)))
         special_mode = int(special_mode)
-        print("|", special_mode)
         self.__m = 0
         self.__ping = 1
         self.__pong = -1
         self.__has_ping = False
-        print("1")
         if special_mode:
             self.create_node_send()
             self.create_node_recv()
@@ -58,7 +88,7 @@ class PingPong(PingPongConnectionTCP):
         if special_mode:
             self.sending(True)
             self.sending(False)
-        print("Loop")
+        print("Start loop")
         self.__loop()
 
     def __loop(self):
@@ -71,6 +101,10 @@ class PingPong(PingPongConnectionTCP):
                 self.regenerate(value)
             else:
                 self.__m = value
+                if value > 0:
+                    self.__ping = value
+                else:
+                    self.__pong = value
             if value > 0:
                 self.__has_ping = True
                 self.__critical_section()
@@ -95,10 +129,10 @@ class PingPong(PingPongConnectionTCP):
         self.__pong = -v
 
     def sending(self, send_ping):
-        if keyboard.is_pressed('i'):
+        if send_ping and keyboard.is_pressed('i'):
             print(self.addr_my, "ZAGUBIENIE PINGA")
             return
-        if keyboard.is_pressed('o'):
+        if not send_ping and keyboard.is_pressed('o'):
             print(self.addr_my, "ZAGUBIENIE PONGA")
             return
         value = self.__ping if send_ping else self.__pong
@@ -111,7 +145,7 @@ class PingPong(PingPongConnectionTCP):
         return value
 
     def __critical_section(self):
-        threading.Thread(target=self.__critical_section_body).start()
+        threading.Thread(target=self.__critical_section_body, daemon=True).start()
 
     def __critical_section_body(self):
         print(self.addr_my, "CS: Start")
