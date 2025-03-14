@@ -44,6 +44,7 @@ python misra_algorithm.py 127.0.0.1 5000 127.0.0.1 5001 1
 python misra_algorithm.py 127.0.0.1 5001 127.0.0.1 5002 0
 python misra_algorithm.py 127.0.0.1 5002 127.0.0.1 5000 0
 ```
+![](https://github.ct8.pl/readme/patlukas/Misra1983_PingPong)
 
 ## How It Works
 
