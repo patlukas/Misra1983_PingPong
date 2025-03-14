@@ -71,5 +71,3 @@ To choose whether the algorithm should use **TCP** or **UDP** for communication,
 
 - Ensure that all nodes are properly connected in a ring topology.
 - The program runs in an infinite loop until manually terminated.
-$(basename git rev-parse --show-toplevel)
-![](github.ct8.pl/readme/patlukas/Misra1983_PingPong)
